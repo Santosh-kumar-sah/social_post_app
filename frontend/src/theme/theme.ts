@@ -26,8 +26,8 @@ export const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => {
         paper: isDark ? '#1A1D24' : '#FFFFFF',
       },
       text: {
-        primary: isDark ? '#F5F5F7' : '#181A20',
-        secondary: isDark ? '#9E9EA7' : '#6B6F7B',
+        primary: isDark ? '#F5F3EF' : '#1A1A1A',
+        secondary: isDark ? '#9A98A0' : '#6B6B6B',
       },
       divider: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
       action: {
@@ -37,35 +37,35 @@ export const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => {
     typography: {
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       h1: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 700,
         letterSpacing: '-0.02em',
       },
       h2: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 700,
         letterSpacing: '-0.02em',
       },
       h3: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 700,
         letterSpacing: '-0.01em',
       },
       h4: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 600,
         letterSpacing: '-0.01em',
       },
       h5: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 600,
       },
       h6: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 600,
       },
       subtitle1: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 600,
       },
       subtitle2: {
@@ -81,19 +81,21 @@ export const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => {
         lineHeight: 1.5,
       },
       button: {
-        fontFamily: '"Space Grotesk", sans-serif',
+        fontFamily: '"Space Grotesk", "Sora", sans-serif',
         fontWeight: 600,
         textTransform: 'none',
         letterSpacing: '0.01em',
       },
     },
     shape: {
-      borderRadius: 14,
+      borderRadius: 12,
     },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
+            backgroundColor: isDark ? '#12141A' : '#FAF8F5',
+            color: isDark ? '#F5F3EF' : '#1A1A1A',
             scrollbarColor: isDark ? '#2E333D #12141A' : '#D1D5DB #FAF8F5',
             '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
               width: 8,
@@ -131,12 +133,10 @@ export const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 16,
+            borderRadius: 12,
             backgroundImage: 'none',
             border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
-            boxShadow: isDark
-              ? '0 4px 20px -2px rgba(0, 0, 0, 0.35)'
-              : '0 4px 20px -2px rgba(0, 0, 0, 0.04)',
+            boxShadow: isDark ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.04)',
           },
         },
       },
