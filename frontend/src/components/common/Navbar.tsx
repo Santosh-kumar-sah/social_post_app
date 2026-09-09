@@ -112,6 +112,8 @@ export const Navbar: React.FC = () => {
                     py: 0.6,
                     borderRadius: 3,
                     bgcolor: 'action.hover',
+                    border: '1px solid',
+                    borderColor: 'divider',
                   }}
                 >
                   <Avatar
