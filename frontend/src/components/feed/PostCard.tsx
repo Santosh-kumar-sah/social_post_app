@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -11,26 +11,38 @@ import {
 import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
-import { Post } from '../../types';
+import { Post, LikeItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { LikersPopover } from './LikersPopover';
 
 interface PostCardProps {
   post: Post;
-  onLikeClick?: (post: Post) => void;
-  onCommentClick?: (post: Post) => void;
-  onLikerHover?: (event: React.MouseEvent<HTMLElement>, post: Post) => void;
+  onLikeToggle: (post: Post) => Promise<void>;
+  onOpenComments: (post: Post) => void;
+  onGuestAction?: () => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
   post,
-  onLikeClick,
-  onCommentClick,
+  onLikeToggle,
+  onOpenComments,
+  onGuestAction,
 }) => {
   const { user } = useAuth();
 
+  // Likers popover anchor
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
+  const isPopoverOpen = Boolean(popoverAnchor);
+
+  // Check if current user liked this post
   const isLikedByMe = Boolean(
-    user && post.likes?.some((like) => like.userId === user._id || like.username === user.username)
+    user &&
+      post.likes?.some(
+        (like: LikeItem) =>
+          like.userId === user._id || like.username.toLowerCase() === user.username.toLowerCase()
+      )
   );
 
   const formattedTime = React.useMemo(() => {
@@ -41,6 +53,25 @@ export const PostCard: React.FC<PostCardProps> = ({
       return 'recently';
     }
   }, [post.createdAt]);
+
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      onGuestAction?.();
+      return;
+    }
+    onLikeToggle(post);
+  };
+
+  const handleLikeCountMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+    if (post.likes && post.likes.length > 0) {
+      setPopoverAnchor(event.currentTarget);
+    }
+  };
+
+  const handleLikeCountMouseLeave = () => {
+    setPopoverAnchor(null);
+  };
 
   return (
     <Card
@@ -123,7 +154,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             <Box
               component="img"
               src={post.imageUrl}
-              alt="Post media"
+              alt="Post visual"
               loading="lazy"
               sx={{
                 width: '100%',
@@ -147,16 +178,32 @@ export const PostCard: React.FC<PostCardProps> = ({
             borderColor: 'divider',
           }}
         >
-          {/* Like Action */}
+          {/* Heart Burst Animated Like Button */}
           <Button
             size="small"
-            onClick={() => onLikeClick?.(post)}
+            onClick={handleLikeClick}
+            onMouseEnter={handleLikeCountMouseEnter}
+            onMouseLeave={handleLikeCountMouseLeave}
             startIcon={
-              isLikedByMe ? (
-                <FavoriteRoundedIcon sx={{ color: 'primary.main' }} />
-              ) : (
-                <FavoriteBorderRoundedIcon sx={{ color: 'text.secondary' }} />
-              )
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={isLikedByMe ? 'liked' : 'unliked'}
+                  initial={{ scale: 0.8 }}
+                  animate={
+                    isLikedByMe
+                      ? { scale: [1, 1.45, 0.9, 1], rotate: [0, -12, 12, 0] }
+                      : { scale: 1 }
+                  }
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  style={{ display: 'flex', alignItems: 'center' }}
+                >
+                  {isLikedByMe ? (
+                    <FavoriteRoundedIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                  ) : (
+                    <FavoriteBorderRoundedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             }
             sx={{
               color: isLikedByMe ? 'primary.main' : 'text.secondary',
@@ -164,6 +211,7 @@ export const PostCard: React.FC<PostCardProps> = ({
               fontFamily: '"Space Grotesk", sans-serif',
               px: 1.5,
               py: 0.6,
+              borderRadius: 2,
               '&:hover': {
                 bgcolor: 'action.hover',
                 color: 'primary.main',
@@ -173,17 +221,18 @@ export const PostCard: React.FC<PostCardProps> = ({
             {post.likes?.length || 0} {post.likes?.length === 1 ? 'Like' : 'Likes'}
           </Button>
 
-          {/* Comment Action */}
+          {/* Comment Drawer Trigger Button */}
           <Button
             size="small"
-            onClick={() => onCommentClick?.(post)}
-            startIcon={<ChatBubbleOutlineRoundedIcon sx={{ color: 'text.secondary' }} />}
+            onClick={() => onOpenComments(post)}
+            startIcon={<ChatBubbleOutlineRoundedIcon sx={{ color: 'text.secondary', fontSize: 20 }} />}
             sx={{
               color: 'text.secondary',
               fontWeight: 600,
               fontFamily: '"Space Grotesk", sans-serif',
               px: 1.5,
               py: 0.6,
+              borderRadius: 2,
               '&:hover': {
                 bgcolor: 'action.hover',
                 color: 'text.primary',
@@ -193,6 +242,14 @@ export const PostCard: React.FC<PostCardProps> = ({
             {post.comments?.length || 0} {post.comments?.length === 1 ? 'Comment' : 'Comments'}
           </Button>
         </Stack>
+
+        {/* Hover Avatar Stack Popover */}
+        <LikersPopover
+          anchorEl={popoverAnchor}
+          open={isPopoverOpen}
+          onClose={handleLikeCountMouseLeave}
+          likes={post.likes || []}
+        />
       </CardContent>
     </Card>
   );

@@ -103,3 +103,130 @@ export const getPosts = async (
     });
   }
 };
+
+// @route   POST /api/posts/:id/like
+// @desc    Toggle like/unlike on a post (records userId & username)
+export const toggleLike = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const post = await Post.findById(id);
+
+    if (!post) {
+      res.status(404).json({ success: false, message: 'Post not found.' });
+      return;
+    }
+
+    const currentUserId = req.user.userId;
+    const currentUsername = req.user.username;
+
+    // Check if user has already liked
+    const existingIndex = post.likes.findIndex(
+      (like: any) =>
+        like.userId.toString() === currentUserId ||
+        like.username.toLowerCase() === currentUsername.toLowerCase()
+    );
+
+    let liked = false;
+    if (existingIndex > -1) {
+      // Remove like (unlike)
+      post.likes.splice(existingIndex, 1);
+      liked = false;
+    } else {
+      // Add like
+      post.likes.push({
+        userId: currentUserId as any,
+        username: currentUsername,
+      });
+      liked = true;
+    }
+
+    await post.save();
+
+    res.status(200).json({
+      success: true,
+      liked,
+      likesCount: post.likes.length,
+      likes: post.likes,
+    });
+  } catch (error: any) {
+    console.error('toggleLike error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error toggling like.',
+    });
+  }
+};
+
+// @route   POST /api/posts/:id/comment
+// @desc    Add a comment to a post (records userId, username, text, createdAt)
+export const addComment = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Authentication required.' });
+      return;
+    }
+
+    const { id } = req.params;
+    const { text } = req.body;
+
+    const trimmedText = typeof text === 'string' ? text.trim() : '';
+    if (!trimmedText) {
+      res.status(400).json({
+        success: false,
+        message: 'Comment text cannot be empty.',
+      });
+      return;
+    }
+
+    if (trimmedText.length > 500) {
+      res.status(400).json({
+        success: false,
+        message: 'Comment cannot exceed 500 characters.',
+      });
+      return;
+    }
+
+    const post = await Post.findById(id);
+    if (!post) {
+      res.status(404).json({ success: false, message: 'Post not found.' });
+      return;
+    }
+
+    const newComment = {
+      userId: req.user.userId as any,
+      username: req.user.username,
+      text: trimmedText,
+      createdAt: new Date(),
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    const createdComment = post.comments[post.comments.length - 1];
+
+    res.status(201).json({
+      success: true,
+      message: 'Comment added successfully.',
+      comment: createdComment,
+      comments: post.comments,
+      commentCount: post.comments.length,
+    });
+  } catch (error: any) {
+    console.error('addComment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error adding comment.',
+    });
+  }
+};
