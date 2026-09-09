@@ -11,6 +11,8 @@ import {
   Divider,
   Alert,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
@@ -32,6 +34,8 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
   post,
   onAddComment,
 }) => {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const { user } = useAuth();
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -58,21 +62,26 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
 
   return (
     <Drawer
-      anchor="bottom"
+      anchor={isDesktop ? 'right' : 'bottom'}
       open={open}
       onClose={onClose}
+      transitionDuration={{ enter: 320, exit: 240 }}
       PaperProps={{
         sx: {
-          maxHeight: '85vh',
-          height: { xs: '80vh', sm: '70vh' },
-          maxWidth: 680,
-          mx: 'auto',
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
+          width: isDesktop ? 460 : '100%',
+          maxWidth: isDesktop ? 480 : 680,
+          height: isDesktop ? '100%' : { xs: '82vh', sm: '75vh' },
+          mx: isDesktop ? 0 : 'auto',
+          borderTopLeftRadius: isDesktop ? 0 : 20,
+          borderTopRightRadius: isDesktop ? 0 : 20,
+          borderBottomLeftRadius: isDesktop ? 20 : 0,
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
-          boxShadow: '0 -8px 40px rgba(0, 0, 0, 0.35)',
+          boxShadow: (th) =>
+            th.palette.mode === 'dark'
+              ? '-8px 0 40px rgba(0, 0, 0, 0.6)'
+              : '-8px 0 40px rgba(0, 0, 0, 0.08)',
           display: 'flex',
           flexDirection: 'column',
         },
@@ -91,20 +100,50 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
           <ChatBubbleOutlineRoundedIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-          <Typography variant="h6" sx={{ fontWeight: 700, fontFamily: '"Space Grotesk", sans-serif' }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 700, fontFamily: '"Space Grotesk", "Sora", sans-serif' }}
+          >
             Discussion ({comments.length})
           </Typography>
         </Box>
 
-        <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
-          <CloseRoundedIcon />
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{
+            color: 'text.secondary',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+            p: 0.6,
+          }}
+        >
+          <CloseRoundedIcon fontSize="small" />
         </IconButton>
       </Box>
 
       {/* Post Snippet preview in drawer header */}
       {post && (
-        <Box sx={{ px: 3, py: 1.5, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+        <Box
+          sx={{
+            px: 3,
+            py: 1.8,
+            bgcolor: 'action.hover',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              display: 'block',
+              mb: 0.5,
+              fontWeight: 600,
+              fontFamily: '"Space Grotesk", "Sora", sans-serif',
+            }}
+          >
             Replying to @{post.authorUsername}'s pulse:
           </Typography>
           <Typography
@@ -115,14 +154,15 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              color: 'text.primary',
             }}
           >
-            {post.text || '(Image post)'}
+            {post.text || '(Visual pulse)'}
           </Typography>
         </Box>
       )}
 
-      {/* Comments List */}
+      {/* Comments Scrollable List */}
       <Box sx={{ p: 3, flexGrow: 1, overflowY: 'auto' }}>
         {errorMessage && (
           <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setErrorMessage('')}>
@@ -131,12 +171,27 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
         )}
 
         {comments.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 6, color: 'text.secondary' }}>
-            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+          <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                bgcolor: 'action.hover',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'text.secondary',
+                mb: 1.5,
+              }}
+            >
+              <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 24 }} />
+            </Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5, fontFamily: '"Space Grotesk", "Sora", sans-serif' }}>
               No comments yet
             </Typography>
             <Typography variant="body2">
-              Start the conversation by leaving the first thought below.
+              Start the discussion by sharing your thoughts below.
             </Typography>
           </Box>
         ) : (
@@ -160,7 +215,7 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
                       bgcolor: 'primary.main',
                       fontSize: '0.85rem',
                       fontWeight: 700,
-                      fontFamily: '"Space Grotesk", sans-serif',
+                      fontFamily: '"Space Grotesk", "Sora", sans-serif',
                     }}
                   >
                     {c.username ? c.username.charAt(0).toUpperCase() : '?'}
@@ -169,7 +224,7 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
                     sx={{
                       flexGrow: 1,
                       p: 1.8,
-                      borderRadius: 3,
+                      borderRadius: 2.5,
                       bgcolor: 'action.hover',
                       border: '1px solid',
                       borderColor: 'divider',
@@ -180,13 +235,13 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
                         variant="subtitle2"
                         sx={{
                           fontWeight: 700,
-                          fontFamily: '"Space Grotesk", sans-serif',
+                          fontFamily: '"Space Grotesk", "Sora", sans-serif',
                           lineHeight: 1,
                         }}
                       >
                         @{c.username}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                         • {relativeDate}
                       </Typography>
                     </Box>
@@ -204,7 +259,7 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
         )}
       </Box>
 
-      <Divider />
+      <Divider sx={{ borderColor: 'divider' }} />
 
       {/* Comment Input Footer */}
       <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
@@ -228,7 +283,7 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
               autoFocus
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  borderRadius: 3,
+                  borderRadius: 2.5,
                 },
               }}
             />
