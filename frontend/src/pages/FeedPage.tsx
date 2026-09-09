@@ -1,5 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Container, Box, Typography, Alert, Snackbar } from '@mui/material';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import {
+  Container,
+  Box,
+  Typography,
+  Alert,
+  Snackbar,
+  CircularProgress,
+  Stack,
+  Divider,
+} from '@mui/material';
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import { ComposeBox } from '../components/feed/ComposeBox';
 import { PostCard } from '../components/feed/PostCard';
 import { CommentDrawer } from '../components/feed/CommentDrawer';
@@ -9,11 +19,15 @@ import { fetchPostsApi, toggleLikeApi, addCommentApi } from '../api/posts';
 import { Post, CommentItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 
+const PAGE_SIZE = 10;
+
 export const FeedPage: React.FC = () => {
   const { user } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [toastOpen, setToastOpen] = useState(false);
@@ -23,23 +37,76 @@ export const FeedPage: React.FC = () => {
   const [activeCommentPost, setActiveCommentPost] = useState<Post | null>(null);
   const [commentDrawerOpen, setCommentDrawerOpen] = useState(false);
 
-  const loadPosts = useCallback(async () => {
+  // Sentinel ref for infinite scroll observer
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const loadInitialPosts = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage('');
-      const data = await fetchPostsApi(25);
+      const data = await fetchPostsApi(PAGE_SIZE);
       setPosts(data.posts || []);
+      setHasMore(Boolean(data.hasMore));
     } catch (err: any) {
       console.error('Failed to load posts:', err);
-      setErrorMessage('Could not load posts. Please check server connection.');
+      setErrorMessage('Could not load community feed. Please check your connection.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
+    loadInitialPosts();
+  }, [loadInitialPosts]);
+
+  // Load next batch via cursor (?before=<createdAt>&limit=10)
+  const loadMorePosts = useCallback(async () => {
+    if (loading || loadingMore || !hasMore || posts.length === 0) return;
+
+    try {
+      setLoadingMore(true);
+      const lastPost = posts[posts.length - 1];
+      const data = await fetchPostsApi(PAGE_SIZE, lastPost.createdAt);
+
+      if (data.posts && data.posts.length > 0) {
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p._id));
+          const uniqueNewPosts = data.posts.filter((p) => !existingIds.has(p._id));
+          return [...prev, ...uniqueNewPosts];
+        });
+      }
+      setHasMore(Boolean(data.hasMore));
+    } catch (err) {
+      console.error('Error fetching more posts:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, hasMore, posts]);
+
+  // IntersectionObserver for cursor infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          loadMorePosts();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '250px',
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, loadingMore, loading, loadMorePosts]);
 
   const showToast = (message: string, severity: 'success' | 'info' | 'error' = 'success') => {
     setToastMessage(message);
@@ -70,7 +137,7 @@ export const FeedPage: React.FC = () => {
 
     const isCurrentlyLiked = Boolean(postToLike.likes?.some(isMatch));
 
-    // Save snapshot for potential rollback
+    // Save snapshot for rollback
     const previousPosts = [...posts];
 
     // Optimistically update local posts state instantly
@@ -187,7 +254,7 @@ export const FeedPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 4 } }}>
+    <Container maxWidth="sm" sx={{ py: { xs: 2.5, sm: 4 } }}>
       {/* Editorial Header */}
       <Box sx={{ mb: 3 }}>
         <Typography
@@ -247,6 +314,29 @@ export const FeedPage: React.FC = () => {
               onGuestAction={() => showToast('Sign in or register to like and comment.', 'info')}
             />
           ))}
+
+          {/* Infinite Scroll Sentinel */}
+          <Box ref={sentinelRef} sx={{ height: 20, my: 1 }} />
+
+          {/* Loading More Indicator */}
+          {loadingMore && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress size={28} color="primary" />
+            </Box>
+          )}
+
+          {/* All Caught Up Milestone */}
+          {!hasMore && posts.length > 2 && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Divider sx={{ mb: 3, borderColor: 'divider' }} />
+              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                <CheckCircleOutlineRoundedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  You're all caught up on the latest pulses
+                </Typography>
+              </Stack>
+            </Box>
+          )}
         </Box>
       )}
 

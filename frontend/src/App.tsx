@@ -8,35 +8,38 @@ import { FeedPage } from './pages/FeedPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { ThemePreview } from './components/common/ThemePreview';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 export const App: React.FC = () => {
   return (
-    <ThemeModeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Box
-            sx={{
-              minHeight: '100vh',
-              bgcolor: 'background.default',
-              color: 'text.primary',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <Navbar />
-            <Box component="main" sx={{ flexGrow: 1 }}>
-              <Routes>
-                <Route path="/" element={<FeedPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/theme-preview" element={<ThemePreview />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+    <ErrorBoundary>
+      <ThemeModeProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Box
+              sx={{
+                minHeight: '100vh',
+                bgcolor: 'background.default',
+                color: 'text.primary',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Navbar />
+              <Box component="main" sx={{ flexGrow: 1 }}>
+                <Routes>
+                  <Route path="/" element={<FeedPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/theme-preview" element={<ThemePreview />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Box>
             </Box>
-          </Box>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeModeProvider>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeModeProvider>
+    </ErrorBoundary>
   );
 };
 
