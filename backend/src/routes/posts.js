@@ -1,12 +1,12 @@
-import { Router } from 'express';
-import {
+const { Router } = require('express');
+const {
   createPost,
   getPosts,
   toggleLike,
   addComment,
-} from '../controllers/postController';
-import { requireAuth } from '../middleware/auth';
-import { uploadSingleImage } from '../middleware/upload';
+} = require('../controllers/postController');
+const { requireAuth } = require('../middleware/auth');
+const { uploadSingleImage } = require('../middleware/upload');
 
 const router = Router();
 
@@ -22,4 +22,4 @@ router.post('/:id/like', requireAuth, toggleLike);
 // Protected comment addition route
 router.post('/:id/comment', requireAuth, addComment);
 
-export default router;
+module.exports = router;

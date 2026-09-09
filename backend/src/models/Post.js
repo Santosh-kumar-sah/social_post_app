@@ -1,33 +1,9 @@
-import mongoose, { Schema, Document } from 'mongoose';
+const mongoose = require('mongoose');
 
-export interface ILike {
-  userId: mongoose.Types.ObjectId;
-  username: string;
-}
-
-export interface IComment {
-  _id?: mongoose.Types.ObjectId;
-  userId: mongoose.Types.ObjectId;
-  username: string;
-  text: string;
-  createdAt: Date;
-}
-
-export interface IPostDocument extends Document {
-  authorId: mongoose.Types.ObjectId;
-  authorUsername: string;
-  authorAvatarUrl?: string;
-  text?: string;
-  imageUrl?: string;
-  likes: ILike[];
-  comments: IComment[];
-  createdAt: Date;
-}
-
-const LikeSchema = new Schema<ILike>(
+const LikeSchema = new mongoose.Schema(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
@@ -39,10 +15,10 @@ const LikeSchema = new Schema<ILike>(
   { _id: false }
 );
 
-const CommentSchema = new Schema<IComment>(
+const CommentSchema = new mongoose.Schema(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
@@ -64,10 +40,10 @@ const CommentSchema = new Schema<IComment>(
   { _id: true }
 );
 
-const PostSchema = new Schema<IPostDocument>(
+const PostSchema = new mongoose.Schema(
   {
     authorId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'Author ID is required'],
       index: true,
@@ -105,12 +81,11 @@ const PostSchema = new Schema<IPostDocument>(
     },
   },
   {
-    collection: 'posts', // Strictly adheres to the 2-collection constraint: 'users' and 'posts'
+    collection: 'posts',
     timestamps: false,
   }
 );
 
-// Index for newest-first public feed queries
 PostSchema.index({ createdAt: -1 });
 
-export default mongoose.models.Post || mongoose.model<IPostDocument>('Post', PostSchema);
+module.exports = mongoose.models.Post || mongoose.model('Post', PostSchema);

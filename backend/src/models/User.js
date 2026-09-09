@@ -1,9 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
-import { IUser } from '../types';
+const mongoose = require('mongoose');
 
-export interface IUserDocument extends Omit<IUser, '_id'>, Document {}
-
-const UserSchema = new Schema<IUserDocument>(
+const UserSchema = new mongoose.Schema(
   {
     username: {
       type: String,
@@ -41,4 +38,4 @@ const UserSchema = new Schema<IUserDocument>(
   }
 );
 
-export default mongoose.models.User || mongoose.model<IUserDocument>('User', UserSchema);
+module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

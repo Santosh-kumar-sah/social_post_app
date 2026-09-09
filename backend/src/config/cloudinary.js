@@ -1,5 +1,5 @@
-import { v2 as cloudinary } from 'cloudinary';
-import dotenv from 'dotenv';
+const { v2: cloudinary } = require('cloudinary');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
@@ -26,13 +26,8 @@ if (isConfigured) {
 /**
  * Upload an image buffer to Cloudinary, or return base64 Data URL fallback for local development.
  */
-export const uploadImageBuffer = async (
-  buffer: Buffer,
-  mimetype: string
-): Promise<string> => {
+const uploadImageBuffer = async (buffer, mimetype) => {
   if (!isConfigured) {
-    // Graceful fallback for local development without credentials:
-    // convert buffer to base64 Data URL so images still render perfectly
     const base64 = buffer.toString('base64');
     return `data:${mimetype};base64,${base64}`;
   }
@@ -57,4 +52,4 @@ export const uploadImageBuffer = async (
   });
 };
 
-export default cloudinary;
+module.exports = { cloudinary, uploadImageBuffer };

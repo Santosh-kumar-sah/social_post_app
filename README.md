@@ -65,7 +65,7 @@ Rather than creating separate collections for `likes` and `comments`, Pulse embe
 - **State & Theming**: Custom `ThemeContext` (Dark/Light mode switcher) + `AuthContext` (JWT session management)
 
 ### Backend
-- **Runtime**: Node.js + Express + TypeScript
+- **Runtime**: Node.js + Express (JavaScript)
 - **Database**: MongoDB + Mongoose ODM (strictly 2 collections)
 - **Authentication**: JWT (JSON Web Tokens) with 7-day expiration + `bcryptjs` password hashing (salt rounds 10)
 - **Media Uploads**: Multer memory storage + Cloudinary API (with base64 Data URL fallback for local development)
@@ -94,11 +94,10 @@ npm install
 # Create .env from .env.example
 cp .env.example .env
 
-# Run in development mode (hot reloading)
+# Run in development mode (hot reloading with nodemon)
 npm run dev
 
-# Or build & start production server
-npm run build
+# Or start production server
 npm start
 ```
 *Backend runs on `http://localhost:5000`.*

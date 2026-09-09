@@ -1,12 +1,8 @@
-import multer from 'multer';
+const multer = require('multer');
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (
-  _req: any,
-  file: Express.Multer.File,
-  cb: multer.FileFilterCallback
-) => {
+const fileFilter = (_req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
@@ -14,10 +10,12 @@ const fileFilter = (
   }
 };
 
-export const uploadSingleImage = multer({
+const uploadSingleImage = multer({
   storage,
   fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
 }).single('image');
+
+module.exports = { uploadSingleImage };

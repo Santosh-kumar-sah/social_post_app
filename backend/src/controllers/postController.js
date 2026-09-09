@@ -1,19 +1,13 @@
-import { Response } from 'express';
-import Post from '../models/Post';
-import User from '../models/User';
-import { AuthenticatedRequest } from '../types';
-import { uploadImageBuffer } from '../config/cloudinary';
+const Post = require('../models/Post');
+const User = require('../models/User');
+const { uploadImageBuffer } = require('../config/cloudinary');
 
 // @route   POST /api/posts
 // @desc    Create a new post (text OR image OR both required)
-export const createPost = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+const createPost = async (req, res) => {
   try {
     if (!req.user) {
-      res.status(401).json({ success: false, message: 'Authentication required to post.' });
-      return;
+      return res.status(401).json({ success: false, message: 'Authentication required to post.' });
     }
 
     const { text, imageUrl: directImageUrl } = req.body;
@@ -28,11 +22,10 @@ export const createPost = async (
 
     // Hard constraint: At least one of text or image must be present
     if (!trimmedText && !finalImageUrl) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: 'A post must contain either text, an image, or both.',
       });
-      return;
     }
 
     // Fetch author's current avatar for denormalized fast feed rendering
@@ -49,14 +42,14 @@ export const createPost = async (
       createdAt: new Date(),
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Post created successfully.',
       post: newPost,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('createPost error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message || 'Server error creating post.',
     });
@@ -64,16 +57,13 @@ export const createPost = async (
 };
 
 // @route   GET /api/posts
-// @desc    Get all posts (newest first, public)
-export const getPosts = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+// @desc    Get all posts (newest first, public, cursor paginated)
+const getPosts = async (req, res) => {
   try {
-    const limit = Math.min(Math.max(parseInt(req.query.limit as string, 10) || 15, 1), 50);
-    const before = req.query.before as string;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 15, 1), 50);
+    const before = req.query.before;
 
-    const query: any = {};
+    const query = {};
     if (before) {
       const beforeDate = new Date(before);
       if (!isNaN(beforeDate.getTime())) {
@@ -89,15 +79,15 @@ export const getPosts = async (
     const hasMore = posts.length > limit;
     const paginatedPosts = hasMore ? posts.slice(0, limit) : posts;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: paginatedPosts.length,
       hasMore,
       posts: paginatedPosts,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('getPosts error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Server error fetching posts.',
     });
@@ -106,30 +96,25 @@ export const getPosts = async (
 
 // @route   POST /api/posts/:id/like
 // @desc    Toggle like/unlike on a post (records userId & username)
-export const toggleLike = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+const toggleLike = async (req, res) => {
   try {
     if (!req.user) {
-      res.status(401).json({ success: false, message: 'Authentication required.' });
-      return;
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
     const { id } = req.params;
     const post = await Post.findById(id);
 
     if (!post) {
-      res.status(404).json({ success: false, message: 'Post not found.' });
-      return;
+      return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
-    const currentUserId = req.user.userId;
-    const currentUsername = req.user.username;
+    const currentUserId = req.user.userId.toString();
+    const currentUsername = req.user.username.trim();
 
     // Check if user has already liked
     const existingIndex = post.likes.findIndex(
-      (like: any) =>
+      (like) =>
         (like.userId && like.userId.toString() === currentUserId) ||
         (like.username && like.username.toLowerCase() === currentUsername.toLowerCase())
     );
@@ -142,7 +127,7 @@ export const toggleLike = async (
     } else {
       // Add like
       post.likes.push({
-        userId: currentUserId as any,
+        userId: currentUserId,
         username: currentUsername,
       });
       liked = true;
@@ -150,15 +135,15 @@ export const toggleLike = async (
 
     await post.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       liked,
       likesCount: post.likes.length,
       likes: post.likes,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('toggleLike error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Server error toggling like.',
     });
@@ -167,14 +152,10 @@ export const toggleLike = async (
 
 // @route   POST /api/posts/:id/comment
 // @desc    Add a comment to a post (records userId, username, text, createdAt)
-export const addComment = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+const addComment = async (req, res) => {
   try {
     if (!req.user) {
-      res.status(401).json({ success: false, message: 'Authentication required.' });
-      return;
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
     const { id } = req.params;
@@ -182,29 +163,26 @@ export const addComment = async (
 
     const trimmedText = typeof text === 'string' ? text.trim() : '';
     if (!trimmedText) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: 'Comment text cannot be empty.',
       });
-      return;
     }
 
     if (trimmedText.length > 500) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: 'Comment cannot exceed 500 characters.',
       });
-      return;
     }
 
     const post = await Post.findById(id);
     if (!post) {
-      res.status(404).json({ success: false, message: 'Post not found.' });
-      return;
+      return res.status(404).json({ success: false, message: 'Post not found.' });
     }
 
     const newComment = {
-      userId: req.user.userId as any,
+      userId: req.user.userId,
       username: req.user.username,
       text: trimmedText,
       createdAt: new Date(),
@@ -215,18 +193,25 @@ export const addComment = async (
 
     const createdComment = post.comments[post.comments.length - 1];
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Comment added successfully.',
       comment: createdComment,
       comments: post.comments,
       commentCount: post.comments.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('addComment error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Server error adding comment.',
     });
   }
+};
+
+module.exports = {
+  createPost,
+  getPosts,
+  toggleLike,
+  addComment,
 };

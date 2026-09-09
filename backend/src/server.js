@@ -1,14 +1,14 @@
-import express, { Application } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectDB } from './config/db';
-import healthRoutes from './routes/health';
-import authRoutes from './routes/auth';
-import postRoutes from './routes/posts';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { connectDB } = require('./config/db');
+const healthRoutes = require('./routes/health');
+const authRoutes = require('./routes/auth');
+const postRoutes = require('./routes/posts');
 
 dotenv.config();
 
-const app: Application = express();
+const app = express();
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
@@ -31,7 +31,7 @@ app.use('/api/posts', postRoutes);
 connectDB();
 
 app.listen(PORT, () => {
-  console.log(`Pulse Backend API running on port ${PORT}`);
+  console.log(`Pulse Backend API (Node.js/Express) running on port ${PORT}`);
 });
 
-export default app;
+module.exports = app;
