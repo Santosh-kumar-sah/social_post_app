@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Button } from '@mui/material';
-import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import PostAddRoundedIcon from '@mui/icons-material/PostAddRounded';
 import { useAuth } from '../../context/AuthContext';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -8,14 +8,28 @@ export const EmptyFeed: React.FC<{ onStartFirstPost?: () => void }> = ({ onStart
   const { user } = useAuth();
 
   return (
-    <Card sx={{ textAlign: 'center', py: 6, px: 3, my: 4 }}>
-      <CardContent>
+    <Card
+      sx={{
+        textAlign: 'center',
+        py: 7,
+        px: 3,
+        my: 3,
+        borderRadius: 3,
+        border: '1px solid',
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <CardContent sx={{ p: 0 }}>
+        {/* Simple friendly line-icon */}
         <Box
           sx={{
-            width: 64,
-            height: 64,
+            width: 60,
+            height: 60,
             borderRadius: '50%',
             bgcolor: 'action.hover',
+            border: '1px solid',
+            borderColor: 'divider',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -23,15 +37,27 @@ export const EmptyFeed: React.FC<{ onStartFirstPost?: () => void }> = ({ onStart
             mb: 2.5,
           }}
         >
-          <AutoAwesomeRoundedIcon sx={{ fontSize: 32 }} />
+          <PostAddRoundedIcon sx={{ fontSize: 30 }} />
         </Box>
 
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, fontFamily: '"Space Grotesk", sans-serif' }}>
-          No pulses on the radar yet
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 700,
+            mb: 1,
+            fontFamily: '"Space Grotesk", "Sora", sans-serif',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          No posts yet — be the first to post!
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 380, mx: 'auto', mb: 3 }}>
-          The feed is currently waiting for its first spark. Share a thought, milestone, or visual to start the pulse!
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ maxWidth: 360, mx: 'auto', mb: 3.5, lineHeight: 1.6 }}
+        >
+          The feed is quiet right now. Share a thought, idea, or image to start the conversation!
         </Typography>
 
         {user ? (
@@ -39,9 +65,9 @@ export const EmptyFeed: React.FC<{ onStartFirstPost?: () => void }> = ({ onStart
             variant="contained"
             color="primary"
             onClick={onStartFirstPost}
-            sx={{ px: 3, fontWeight: 600 }}
+            sx={{ px: 3, py: 1, fontWeight: 600, borderRadius: 2 }}
           >
-            Create the First Pulse
+            Create the First Post
           </Button>
         ) : (
           <Button
@@ -49,9 +75,9 @@ export const EmptyFeed: React.FC<{ onStartFirstPost?: () => void }> = ({ onStart
             to="/signup"
             variant="contained"
             color="primary"
-            sx={{ px: 3, fontWeight: 600 }}
+            sx={{ px: 3, py: 1, fontWeight: 600, borderRadius: 2 }}
           >
-            Join to Share the First Pulse
+            Join to Share a Post
           </Button>
         )}
       </CardContent>
