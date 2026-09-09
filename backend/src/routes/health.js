@@ -1,3 +1,9 @@
+/**
+ * System Health & Diagnostics Route (/api/health)
+ * 
+ * Verifies backend process availability and active MongoDB connection status.
+ */
+
 const { Router } = require('express');
 const mongoose = require('mongoose');
 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, LoginCredentials, SignupCredentials } from '../types';
 import { loginApi, signupApi, getMeApi } from '../api/auth';
+import { storage } from '../utils/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -23,30 +24,24 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('pulse_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('pulse_jwt_token');
-  });
+  const [user, setUser] = useState<User | null>(() => storage.getUser());
+  const [token, setToken] = useState<string | null>(() => storage.getToken());
   const [loading, setLoading] = useState<boolean>(true);
 
   // Sync token and check authentication on boot
   useEffect(() => {
     const verifyAuth = async () => {
-      const storedToken = localStorage.getItem('pulse_jwt_token');
+      const storedToken = storage.getToken();
       if (storedToken) {
         try {
           const res = await getMeApi();
           if (res.user) {
             setUser(res.user);
-            localStorage.setItem('pulse_user', JSON.stringify(res.user));
+            storage.setUser(res.user);
           }
-        } catch (err) {
+        } catch {
           console.warn('Session expired or invalid, clearing credentials.');
-          localStorage.removeItem('pulse_jwt_token');
-          localStorage.removeItem('pulse_user');
+          storage.clearAuth();
           setUser(null);
           setToken(null);
         }
@@ -57,29 +52,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     verifyAuth();
   }, []);
 
+  const saveAuthSession = (authToken: string, authUser: User) => {
+    storage.setToken(authToken);
+    storage.setUser(authUser);
+    setToken(authToken);
+    setUser(authUser);
+  };
+
   const login = useCallback(async (credentials: LoginCredentials) => {
     const res = await loginApi(credentials);
     if (res.token && res.user) {
-      localStorage.setItem('pulse_jwt_token', res.token);
-      localStorage.setItem('pulse_user', JSON.stringify(res.user));
-      setToken(res.token);
-      setUser(res.user);
+      saveAuthSession(res.token, res.user);
     }
   }, []);
 
   const signup = useCallback(async (credentials: SignupCredentials) => {
     const res = await signupApi(credentials);
     if (res.token && res.user) {
-      localStorage.setItem('pulse_jwt_token', res.token);
-      localStorage.setItem('pulse_user', JSON.stringify(res.user));
-      setToken(res.token);
-      setUser(res.user);
+      saveAuthSession(res.token, res.user);
     }
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('pulse_jwt_token');
-    localStorage.removeItem('pulse_user');
+    storage.clearAuth();
     setUser(null);
     setToken(null);
   }, []);

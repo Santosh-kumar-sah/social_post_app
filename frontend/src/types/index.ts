@@ -25,7 +25,6 @@ export interface SignupCredentials {
   avatarUrl?: string;
 }
 
-// Data types for Posts in Phase 2 & 3
 export interface LikeItem {
   userId: string;
   username: string;
@@ -49,4 +48,34 @@ export interface Post {
   likes: LikeItem[];
   comments: CommentItem[];
   createdAt: string;
+}
+
+export interface PostsResponse {
+  success: boolean;
+  count: number;
+  hasMore: boolean;
+  posts: Post[];
+  message?: string;
+}
+
+export interface CreatePostResponse {
+  success: boolean;
+  message?: string;
+  post: Post;
+}
+
+export interface LikeResponse {
+  success: boolean;
+  liked: boolean;
+  likesCount: number;
+  likes: LikeItem[];
+  message?: string;
+}
+
+export interface CommentResponse {
+  success: boolean;
+  message?: string;
+  comment: CommentItem;
+  comments: CommentItem[];
+  commentCount: number;
 }

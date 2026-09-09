@@ -1,3 +1,13 @@
+/**
+ * ============================================================================
+ * User Model — Collection 1 of 2: `users`
+ * ============================================================================
+ * Strictly adheres to the project non-negotiables:
+ * - Exactly two MongoDB collections exist in the system (`users` and `posts`).
+ * - Encapsulates account identity, unique credentials, and profile avatar.
+ * - Password hashes are generated using bcryptjs (salt rounds 10) before storage.
+ */
+
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema(
@@ -33,6 +43,7 @@ const UserSchema = new mongoose.Schema(
     },
   },
   {
+    // Explicitly enforce the 'users' collection name (Rule: exactly 2 collections)
     collection: 'users',
     timestamps: false,
   }

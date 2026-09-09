@@ -10,12 +10,9 @@ import {
   Divider,
 } from '@mui/material';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
-import { ComposeBox } from '../components/feed/ComposeBox';
-import { PostCard } from '../components/feed/PostCard';
-import { CommentDrawer } from '../components/feed/CommentDrawer';
-import { EmptyFeed } from '../components/feed/EmptyFeed';
-import { FeedSkeleton } from '../components/skeleton/PostSkeleton';
-import { fetchPostsApi, toggleLikeApi, addCommentApi } from '../api/posts';
+import { ComposeBox, PostCard, CommentDrawer, EmptyFeed } from '../components/feed';
+import { FeedSkeleton } from '../components/skeleton';
+import { fetchPostsApi, toggleLikeApi, addCommentApi } from '../api';
 import { Post, CommentItem } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';

@@ -3,12 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { ThemeModeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
-import { Navbar } from './components/common/Navbar';
-import { FeedPage } from './pages/FeedPage';
-import { LoginPage } from './pages/LoginPage';
-import { SignupPage } from './pages/SignupPage';
-import { ThemePreview } from './components/common/ThemePreview';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { Navbar, ThemePreview, ErrorBoundary } from './components/common';
+import { FeedPage, LoginPage, SignupPage } from './pages';
 
 export const App: React.FC = () => {
   return (

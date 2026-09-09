@@ -13,7 +13,6 @@ import {
   CircularProgress,
   Link,
   Snackbar,
-  Avatar,
   Stack,
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
@@ -21,6 +20,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDiceBearAvatar } from '../utils/avatar';
+import { UserAvatar } from '../components/common/UserAvatar';
 
 export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,8 +47,7 @@ export const SignupPage: React.FC = () => {
   // Preview avatar live
   const previewAvatar = useMemo(() => {
     if (avatarUrl.trim()) return avatarUrl.trim();
-    const seed = username.trim() || 'pulse';
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=FF5C5C`;
+    return getDiceBearAvatar(username || 'pulse');
   }, [username, avatarUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,12 +117,11 @@ export const SignupPage: React.FC = () => {
     <Container maxWidth="xs" sx={{ py: { xs: 4, md: 8 } }}>
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Stack direction="row" justifyContent="center" sx={{ mb: 2 }}>
-          <Avatar
-            src={previewAvatar}
-            alt={username || 'New User'}
+          <UserAvatar
+            username={username || 'New User'}
+            avatarUrl={previewAvatar}
+            size="lg"
             sx={{
-              width: 64,
-              height: 64,
               boxShadow: '0 4px 20px rgba(255, 92, 92, 0.35)',
               border: '2px solid',
               borderColor: 'primary.main',

@@ -1,13 +1,23 @@
 const Post = require('../models/Post');
 const User = require('../models/User');
 const { uploadImageBuffer } = require('../config/cloudinary');
+const {
+  MAX_POST_TEXT_LENGTH,
+  MAX_COMMENT_LENGTH,
+  DEFAULT_FEED_LIMIT,
+  MAX_FEED_LIMIT,
+} = require('../config/constants');
+const { sendSuccess, sendError } = require('../utils/response');
 
-// @route   POST /api/posts
-// @desc    Create a new post (text OR image OR both required)
+/**
+ * @route   POST /api/posts
+ * @desc    Create a new social post (text OR image OR both required)
+ * @access  Private (requires valid JWT)
+ */
 const createPost = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Authentication required to post.' });
+      return sendError(res, 'Authentication required to post.', 401);
     }
 
     const { text, imageUrl: directImageUrl } = req.body;
@@ -22,10 +32,11 @@ const createPost = async (req, res) => {
 
     // Hard constraint: At least one of text or image must be present
     if (!trimmedText && !finalImageUrl) {
-      return res.status(400).json({
-        success: false,
-        message: 'A post must contain either text, an image, or both.',
-      });
+      return sendError(res, 'A post must contain either text, an image, or both.', 400);
+    }
+
+    if (trimmedText.length > MAX_POST_TEXT_LENGTH) {
+      return sendError(res, `Post text cannot exceed ${MAX_POST_TEXT_LENGTH} characters.`, 400);
     }
 
     // Fetch author's current avatar for denormalized fast feed rendering
@@ -42,25 +53,22 @@ const createPost = async (req, res) => {
       createdAt: new Date(),
     });
 
-    return res.status(201).json({
-      success: true,
-      message: 'Post created successfully.',
-      post: newPost,
-    });
+    return sendSuccess(res, { post: newPost }, 'Post created successfully.', 201);
   } catch (error) {
     console.error('createPost error:', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Server error creating post.',
-    });
+    return sendError(res, error.message || 'Server error creating post.', 500);
   }
 };
 
-// @route   GET /api/posts
-// @desc    Get all posts (newest first, public, cursor paginated)
+/**
+ * @route   GET /api/posts
+ * @desc    Fetch paginated post feed (cursor-based, newest first)
+ * @access  Public
+ */
 const getPosts = async (req, res) => {
   try {
-    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 15, 1), 50);
+    const rawLimit = parseInt(req.query.limit, 10) || DEFAULT_FEED_LIMIT;
+    const limit = Math.min(Math.max(rawLimit, 1), MAX_FEED_LIMIT);
     const before = req.query.before;
 
     const query = {};
@@ -79,34 +87,33 @@ const getPosts = async (req, res) => {
     const hasMore = posts.length > limit;
     const paginatedPosts = hasMore ? posts.slice(0, limit) : posts;
 
-    return res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       count: paginatedPosts.length,
       hasMore,
       posts: paginatedPosts,
     });
   } catch (error) {
     console.error('getPosts error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error fetching posts.',
-    });
+    return sendError(res, 'Server error fetching posts.', 500);
   }
 };
 
-// @route   POST /api/posts/:id/like
-// @desc    Toggle like/unlike on a post (records userId & username)
+/**
+ * @route   POST /api/posts/:id/like
+ * @desc    Toggle like/unlike on a post
+ * @access  Private (requires valid JWT)
+ */
 const toggleLike = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Authentication required.' });
+      return sendError(res, 'Authentication required.', 401);
     }
 
     const { id } = req.params;
     const post = await Post.findById(id);
 
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found.' });
+      return sendError(res, 'Post not found.', 404);
     }
 
     const currentUserId = req.user.userId.toString();
@@ -135,27 +142,26 @@ const toggleLike = async (req, res) => {
 
     await post.save();
 
-    return res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       liked,
       likesCount: post.likes.length,
       likes: post.likes,
     });
   } catch (error) {
     console.error('toggleLike error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error toggling like.',
-    });
+    return sendError(res, 'Server error toggling like.', 500);
   }
 };
 
-// @route   POST /api/posts/:id/comment
-// @desc    Add a comment to a post (records userId, username, text, createdAt)
+/**
+ * @route   POST /api/posts/:id/comment
+ * @desc    Add a comment to an existing post
+ * @access  Private (requires valid JWT)
+ */
 const addComment = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ success: false, message: 'Authentication required.' });
+      return sendError(res, 'Authentication required.', 401);
     }
 
     const { id } = req.params;
@@ -163,22 +169,16 @@ const addComment = async (req, res) => {
 
     const trimmedText = typeof text === 'string' ? text.trim() : '';
     if (!trimmedText) {
-      return res.status(400).json({
-        success: false,
-        message: 'Comment text cannot be empty.',
-      });
+      return sendError(res, 'Comment text cannot be empty.', 400);
     }
 
-    if (trimmedText.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Comment cannot exceed 500 characters.',
-      });
+    if (trimmedText.length > MAX_COMMENT_LENGTH) {
+      return sendError(res, `Comment cannot exceed ${MAX_COMMENT_LENGTH} characters.`, 400);
     }
 
     const post = await Post.findById(id);
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found.' });
+      return sendError(res, 'Post not found.', 404);
     }
 
     const newComment = {
@@ -193,19 +193,19 @@ const addComment = async (req, res) => {
 
     const createdComment = post.comments[post.comments.length - 1];
 
-    return res.status(201).json({
-      success: true,
-      message: 'Comment added successfully.',
-      comment: createdComment,
-      comments: post.comments,
-      commentCount: post.comments.length,
-    });
+    return sendSuccess(
+      res,
+      {
+        comment: createdComment,
+        comments: post.comments,
+        commentCount: post.comments.length,
+      },
+      'Comment added successfully.',
+      201
+    );
   } catch (error) {
     console.error('addComment error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error adding comment.',
-    });
+    return sendError(res, 'Server error adding comment.', 500);
   }
 };
 

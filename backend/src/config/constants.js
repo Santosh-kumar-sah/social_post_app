@@ -1,0 +1,32 @@
+/**
+ * Application Constants & Configuration Defaults
+ */
+
+const JWT_DEFAULT_SECRET = 'pulse_super_secret_jwt_key_change_in_production';
+const JWT_EXPIRES_IN = '7d';
+const BCRYPT_SALT_ROUNDS = 10;
+
+const MAX_POST_TEXT_LENGTH = 500;
+const MAX_COMMENT_LENGTH = 500;
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
+const USERNAME_MIN_LENGTH = 3;
+const USERNAME_MAX_LENGTH = 30;
+const PASSWORD_MIN_LENGTH = 6;
+
+const DEFAULT_FEED_LIMIT = 15;
+const MAX_FEED_LIMIT = 50;
+
+module.exports = {
+  JWT_DEFAULT_SECRET,
+  JWT_EXPIRES_IN,
+  BCRYPT_SALT_ROUNDS,
+  MAX_POST_TEXT_LENGTH,
+  MAX_COMMENT_LENGTH,
+  MAX_FILE_SIZE_BYTES,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  DEFAULT_FEED_LIMIT,
+  MAX_FEED_LIMIT,
+};

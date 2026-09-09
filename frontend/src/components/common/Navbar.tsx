@@ -5,7 +5,6 @@ import {
   Typography,
   Box,
   Button,
-  Avatar,
   Stack,
   Container,
   IconButton,
@@ -15,6 +14,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
+import { UserAvatar } from './UserAvatar';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -35,7 +35,7 @@ export const Navbar: React.FC = () => {
         borderColor: 'divider',
         bgcolor: 'background.paper',
         backdropFilter: 'blur(10px)',
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+        zIndex: (theme) => theme.zIndex.appBar,
       }}
     >
       <Container maxWidth="lg">
@@ -116,20 +116,11 @@ export const Navbar: React.FC = () => {
                     borderColor: 'divider',
                   }}
                 >
-                  <Avatar
-                    src={user.avatarUrl}
-                    alt={user.username}
-                    sx={{
-                      width: 30,
-                      height: 30,
-                      bgcolor: 'primary.main',
-                      fontSize: '0.85rem',
-                      fontFamily: '"Space Grotesk", sans-serif',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {user.username.charAt(0).toUpperCase()}
-                  </Avatar>
+                  <UserAvatar
+                    username={user.username}
+                    avatarUrl={user.avatarUrl}
+                    size="sm"
+                  />
                   <Typography
                     variant="subtitle2"
                     sx={{

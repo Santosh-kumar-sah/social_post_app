@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from '@mui/material';
 import { createAppTheme } from '../theme/theme';
+import { storage } from '../utils/storage';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -17,13 +18,10 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useThemeMode = () => useContext(ThemeContext);
 
 export const ThemeModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem('pulse_theme_mode');
-    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
-  });
+  const [mode, setMode] = useState<ThemeMode>(() => storage.getThemeMode());
 
   useEffect(() => {
-    localStorage.setItem('pulse_theme_mode', mode);
+    storage.setThemeMode(mode);
   }, [mode]);
 
   const toggleTheme = () => {

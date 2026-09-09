@@ -6,7 +6,6 @@ import {
   TextField,
   Button,
   IconButton,
-  Avatar,
   Typography,
   Stack,
   Tooltip,
@@ -20,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { createPostApi } from '../../api/posts';
 import { Post } from '../../types';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface ComposeBoxProps {
   onPostCreated: (post: Post) => void;
@@ -197,20 +197,7 @@ export const ComposeBox: React.FC<ComposeBoxProps> = ({ onPostCreated }) => {
 
           {/* User Avatar + Input Area */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', mb: 1.5 }}>
-            <Avatar
-              src={user.avatarUrl}
-              alt={user.username}
-              sx={{
-                width: 38,
-                height: 38,
-                bgcolor: 'primary.main',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                fontFamily: '"Space Grotesk", "Sora", sans-serif',
-              }}
-            >
-              {user.username.charAt(0).toUpperCase()}
-            </Avatar>
+            <UserAvatar username={user.username} avatarUrl={user.avatarUrl} size={38} />
 
             <Box sx={{ flexGrow: 1 }}>
               <TextField

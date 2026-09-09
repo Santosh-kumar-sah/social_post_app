@@ -6,20 +6,21 @@ import {
   IconButton,
   TextField,
   Button,
-  Avatar,
   Stack,
   Divider,
   Alert,
   CircularProgress,
+  Tooltip,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
-import { formatDistanceToNow } from 'date-fns';
 import { Post, CommentItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { formatRelativeTime } from '../../utils/date';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface CommentDrawerProps {
   open: boolean;
@@ -66,6 +67,9 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
       open={open}
       onClose={onClose}
       transitionDuration={{ enter: 320, exit: 240 }}
+      sx={{
+        zIndex: (th) => th.zIndex.modal + 10,
+      }}
       PaperProps={{
         sx: {
           width: isDesktop ? 460 : '100%',
@@ -87,6 +91,21 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
         },
       }}
     >
+      {/* Mobile Drawer Drag Handle Indicator */}
+      {!isDesktop && (
+        <Box
+          sx={{
+            width: 40,
+            height: 4,
+            borderRadius: 2,
+            bgcolor: 'divider',
+            mx: 'auto',
+            mt: 1.5,
+            mb: 0.5,
+          }}
+        />
+      )}
+
       {/* Header bar */}
       <Box
         sx={{
@@ -108,19 +127,29 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
           </Typography>
         </Box>
 
-        <IconButton
-          onClick={onClose}
-          size="small"
-          sx={{
-            color: 'text.secondary',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 2,
-            p: 0.6,
-          }}
-        >
-          <CloseRoundedIcon fontSize="small" />
-        </IconButton>
+        <Tooltip title="Close discussion">
+          <IconButton
+            onClick={onClose}
+            aria-label="Close comments"
+            size="small"
+            sx={{
+              color: 'text.primary',
+              bgcolor: 'action.hover',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              p: 0.8,
+              '&:hover': {
+                bgcolor: 'primary.main',
+                color: '#FFFFFF',
+                borderColor: 'primary.main',
+              },
+              transition: 'all 0.15s ease-in-out',
+            }}
+          >
+            <CloseRoundedIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Tooltip>
       </Box>
 
       {/* Post Snippet preview in drawer header */}
@@ -197,29 +226,14 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
         ) : (
           <Stack spacing={2.5}>
             {comments.map((c: CommentItem, idx: number) => {
-              let relativeDate = 'just now';
-              try {
-                if (c.createdAt) {
-                  relativeDate = formatDistanceToNow(new Date(c.createdAt), { addSuffix: true });
-                }
-              } catch {
-                relativeDate = 'recently';
-              }
+              const relativeDate = formatRelativeTime(c.createdAt);
 
               return (
                 <Box key={c._id || `comment-${idx}`} sx={{ display: 'flex', gap: 1.5 }}>
-                  <Avatar
-                    sx={{
-                      width: 34,
-                      height: 34,
-                      bgcolor: 'primary.main',
-                      fontSize: '0.85rem',
-                      fontWeight: 700,
-                      fontFamily: '"Space Grotesk", "Sora", sans-serif',
-                    }}
-                  >
-                    {c.username ? c.username.charAt(0).toUpperCase() : '?'}
-                  </Avatar>
+                  <UserAvatar
+                    username={c.username}
+                    size="sm"
+                  />
                   <Box
                     sx={{
                       flexGrow: 1,
@@ -265,13 +279,11 @@ export const CommentDrawer: React.FC<CommentDrawerProps> = ({
       <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
         {user ? (
           <Box component="form" onSubmit={handleSend} sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            <Avatar
-              src={user.avatarUrl}
-              alt={user.username}
-              sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontWeight: 700 }}
-            >
-              {user.username.charAt(0).toUpperCase()}
-            </Avatar>
+            <UserAvatar
+              username={user.username}
+              avatarUrl={user.avatarUrl}
+              size="sm"
+            />
 
             <TextField
               size="small"

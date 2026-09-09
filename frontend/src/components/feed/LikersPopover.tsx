@@ -5,7 +5,6 @@ import {
   Paper,
   Box,
   Typography,
-  Avatar,
   Stack,
   AvatarGroup,
   Divider,
@@ -13,6 +12,7 @@ import {
 } from '@mui/material';
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import { LikeItem } from '../../types';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface LikersPopoverProps {
   anchorEl: HTMLElement | null;
@@ -81,21 +81,16 @@ export const LikersPopover: React.FC<LikersPopoverProps> = ({
                       fontSize: '0.8rem',
                       fontWeight: 700,
                       borderColor: 'background.paper',
-                      bgcolor: 'primary.main',
                       fontFamily: '"Space Grotesk", sans-serif',
                     },
                   }}
                 >
                   {likes.map((like, index) => (
-                    <Avatar
+                    <UserAvatar
                       key={`avatar-${like.userId || index}`}
-                      alt={like.username}
-                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-                        like.username
-                      )}&backgroundColor=FF5C5C`}
-                    >
-                      {like.username ? like.username.charAt(0).toUpperCase() : '?'}
-                    </Avatar>
+                      username={like.username}
+                      size="sm"
+                    />
                   ))}
                 </AvatarGroup>
 
@@ -107,18 +102,10 @@ export const LikersPopover: React.FC<LikersPopoverProps> = ({
                       key={`name-${like.userId || index}`}
                       sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                     >
-                      <Avatar
-                        sx={{
-                          width: 22,
-                          height: 22,
-                          fontSize: '0.7rem',
-                          bgcolor: 'action.hover',
-                          color: 'text.primary',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {like.username ? like.username.charAt(0).toUpperCase() : '?'}
-                      </Avatar>
+                      <UserAvatar
+                        username={like.username}
+                        size="xs"
+                      />
                       <Typography
                         variant="caption"
                         sx={{

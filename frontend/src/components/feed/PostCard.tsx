@@ -4,7 +4,6 @@ import {
   CardContent,
   Box,
   Typography,
-  Avatar,
   Stack,
   Button,
 } from '@mui/material';
@@ -12,9 +11,10 @@ import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded
 import FavoriteRoundedIcon from '@mui/icons-material/FavoriteRounded';
 import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
 import { Post, LikeItem } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { formatRelativeTime } from '../../utils/date';
+import { UserAvatar } from '../common/UserAvatar';
 import { LikersPopover } from './LikersPopover';
 
 interface PostCardProps {
@@ -50,12 +50,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   );
 
   const formattedTime = React.useMemo(() => {
-    try {
-      const date = new Date(post.createdAt);
-      return formatDistanceToNow(date, { addSuffix: true });
-    } catch {
-      return 'recently';
-    }
+    return formatRelativeTime(post.createdAt);
   }, [post.createdAt]);
 
   const handleLikeClick = (e: React.MouseEvent) => {
@@ -107,20 +102,11 @@ export const PostCard: React.FC<PostCardProps> = ({
       <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
         {/* Post Header: Author Avatar, Username, Timestamp */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <Avatar
-            src={post.authorAvatarUrl}
-            alt={post.authorUsername}
-            sx={{
-              width: 40,
-              height: 40,
-              bgcolor: 'primary.main',
-              fontWeight: 700,
-              fontFamily: '"Space Grotesk", "Sora", sans-serif',
-              fontSize: '0.95rem',
-            }}
-          >
-            {post.authorUsername ? post.authorUsername.charAt(0).toUpperCase() : '?'}
-          </Avatar>
+          <UserAvatar
+            username={post.authorUsername}
+            avatarUrl={post.authorAvatarUrl}
+            size="md"
+          />
           <Box sx={{ flexGrow: 1 }}>
             <Typography
               variant="subtitle1"
