@@ -18,8 +18,28 @@ import { FeedSkeleton } from '../components/skeleton/PostSkeleton';
 import { fetchPostsApi, toggleLikeApi, addCommentApi } from '../api/posts';
 import { Post, CommentItem } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
 
 const PAGE_SIZE = 10;
+
+const feedContainerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+};
+
+const feedItemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: 'easeOut' },
+  },
+};
 
 export const FeedPage: React.FC = () => {
   const { user } = useAuth();
@@ -305,15 +325,18 @@ export const FeedPage: React.FC = () => {
         <EmptyFeed onStartFirstPost={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
       ) : (
         <Box>
-          {posts.map((post) => (
-            <PostCard
-              key={post._id}
-              post={post}
-              onLikeToggle={handleLikeToggle}
-              onOpenComments={handleOpenComments}
-              onGuestAction={() => showToast('Sign in or register to like and comment.', 'info')}
-            />
-          ))}
+          <motion.div variants={feedContainerVariants} initial="hidden" animate="show">
+            {posts.map((post) => (
+              <motion.div key={post._id} variants={feedItemVariants}>
+                <PostCard
+                  post={post}
+                  onLikeToggle={handleLikeToggle}
+                  onOpenComments={handleOpenComments}
+                  onGuestAction={() => showToast('Sign in or register to like and comment.', 'info')}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
 
           {/* Infinite Scroll Sentinel */}
           <Box ref={sentinelRef} sx={{ height: 20, my: 1 }} />

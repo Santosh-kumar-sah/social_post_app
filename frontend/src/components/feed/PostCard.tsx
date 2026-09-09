@@ -99,8 +99,8 @@ export const PostCard: React.FC<PostCardProps> = ({
         '&:hover': {
           boxShadow: (theme) =>
             theme.palette.mode === 'dark'
-              ? '0 8px 30px rgba(0, 0, 0, 0.45)'
-              : '0 8px 30px rgba(0, 0, 0, 0.08)',
+              ? 'none'
+              : '0 4px 16px rgba(0, 0, 0, 0.06)',
         },
       }}
     >
@@ -111,12 +111,12 @@ export const PostCard: React.FC<PostCardProps> = ({
             src={post.authorAvatarUrl}
             alt={post.authorUsername}
             sx={{
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               bgcolor: 'primary.main',
               fontWeight: 700,
-              fontFamily: '"Space Grotesk", sans-serif',
-              fontSize: '1rem',
+              fontFamily: '"Space Grotesk", "Sora", sans-serif',
+              fontSize: '0.95rem',
             }}
           >
             {post.authorUsername ? post.authorUsername.charAt(0).toUpperCase() : '?'}
@@ -128,12 +128,21 @@ export const PostCard: React.FC<PostCardProps> = ({
                 fontWeight: 700,
                 letterSpacing: '-0.01em',
                 lineHeight: 1.2,
-                fontFamily: '"Space Grotesk", sans-serif',
+                fontFamily: '"Space Grotesk", "Sora", sans-serif',
               }}
             >
               @{post.authorUsername}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.secondary',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                display: 'block',
+                mt: 0.2,
+              }}
+            >
               {formattedTime}
             </Typography>
           </Box>
@@ -160,7 +169,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         {post.imageUrl && (
           <Box
             sx={{
-              borderRadius: 3,
+              borderRadius: 2.5,
               overflow: 'hidden',
               mb: 2.5,
               border: '1px solid',
@@ -185,13 +194,14 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Box>
         )}
 
-        {/* Post Footer Action Row: Like & Comment */}
+        {/* Post Footer Action Row: Like & Comment with Hairline Divider */}
         <Stack
           direction="row"
           spacing={1.5}
           alignItems="center"
           sx={{
-            pt: 1.8,
+            pt: 2,
+            mt: 1,
             borderTop: '1px solid',
             borderColor: 'divider',
           }}
@@ -204,13 +214,13 @@ export const PostCard: React.FC<PostCardProps> = ({
               <AnimatePresence mode="wait">
                 <motion.div
                   key={isLikedByMe ? 'liked' : 'unliked'}
-                  initial={{ scale: 0.8 }}
+                  initial={{ scale: 0.9 }}
                   animate={
                     isLikedByMe
-                      ? { scale: [1, 1.45, 0.9, 1], rotate: [0, -12, 12, 0] }
+                      ? { scale: [1, 1.3, 1] }
                       : { scale: 1 }
                   }
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
                   style={{ display: 'flex', alignItems: 'center' }}
                 >
                   {isLikedByMe ? (
@@ -224,7 +234,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             sx={{
               color: isLikedByMe ? 'primary.main' : 'text.secondary',
               fontWeight: 600,
-              fontFamily: '"Space Grotesk", sans-serif',
+              fontFamily: '"Space Grotesk", "Sora", sans-serif',
               px: 1.5,
               py: 0.6,
               borderRadius: 2,
@@ -241,7 +251,18 @@ export const PostCard: React.FC<PostCardProps> = ({
               onMouseLeave={handleCountMouseLeave}
               sx={{ cursor: 'pointer' }}
             >
-              {post.likes?.length || 0} {post.likes?.length === 1 ? 'Like' : 'Likes'}
+              {/* Animated count pop on increment/decrement */}
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={post.likes?.length || 0}
+                  initial={{ scale: 0.85, opacity: 0.6 }}
+                  animate={{ scale: [1, 1.15, 1], opacity: 1 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  style={{ display: 'inline-block' }}
+                >
+                  {post.likes?.length || 0} {post.likes?.length === 1 ? 'Like' : 'Likes'}
+                </motion.span>
+              </AnimatePresence>
             </Box>
           </Button>
 
@@ -253,7 +274,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             sx={{
               color: 'text.secondary',
               fontWeight: 600,
-              fontFamily: '"Space Grotesk", sans-serif',
+              fontFamily: '"Space Grotesk", "Sora", sans-serif',
               px: 1.5,
               py: 0.6,
               borderRadius: 2,
