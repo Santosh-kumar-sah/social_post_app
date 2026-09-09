@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -31,18 +31,22 @@ export const PostCard: React.FC<PostCardProps> = ({
   onGuestAction,
 }) => {
   const { user } = useAuth();
+  const countSpanRef = useRef<HTMLSpanElement | null>(null);
 
   // Likers popover anchor
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
-  const isPopoverOpen = Boolean(popoverAnchor);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Check if current user liked this post
+  // Robust check if current user liked this post (comparing both userId string and case-insensitive username)
   const isLikedByMe = Boolean(
     user &&
-      post.likes?.some(
-        (like: LikeItem) =>
-          like.userId === user._id || like.username.toLowerCase() === user.username.toLowerCase()
-      )
+      post.likes?.some((like: LikeItem) => {
+        const likeUserId = String(like.userId);
+        const currentUserId = String(user._id);
+        const likeUsername = (like.username || '').toLowerCase();
+        const currentUsername = (user.username || '').toLowerCase();
+        return likeUserId === currentUserId || likeUsername === currentUsername;
+      })
   );
 
   const formattedTime = React.useMemo(() => {
@@ -55,7 +59,15 @@ export const PostCard: React.FC<PostCardProps> = ({
   }, [post.createdAt]);
 
   const handleLikeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
+
+    // Close any open popper immediately on click
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    setPopoverAnchor(null);
+
     if (!user) {
       onGuestAction?.();
       return;
@@ -63,13 +75,19 @@ export const PostCard: React.FC<PostCardProps> = ({
     onLikeToggle(post);
   };
 
-  const handleLikeCountMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+  const handleCountMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
     if (post.likes && post.likes.length > 0) {
-      setPopoverAnchor(event.currentTarget);
+      const target = event.currentTarget;
+      hoverTimeoutRef.current = setTimeout(() => {
+        setPopoverAnchor(target);
+      }, 250);
     }
   };
 
-  const handleLikeCountMouseLeave = () => {
+  const handleCountMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
     setPopoverAnchor(null);
   };
 
@@ -101,7 +119,7 @@ export const PostCard: React.FC<PostCardProps> = ({
               fontSize: '1rem',
             }}
           >
-            {post.authorUsername.charAt(0).toUpperCase()}
+            {post.authorUsername ? post.authorUsername.charAt(0).toUpperCase() : '?'}
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
             <Typography
@@ -182,8 +200,6 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Button
             size="small"
             onClick={handleLikeClick}
-            onMouseEnter={handleLikeCountMouseEnter}
-            onMouseLeave={handleLikeCountMouseLeave}
             startIcon={
               <AnimatePresence mode="wait">
                 <motion.div
@@ -218,7 +234,15 @@ export const PostCard: React.FC<PostCardProps> = ({
               },
             }}
           >
-            {post.likes?.length || 0} {post.likes?.length === 1 ? 'Like' : 'Likes'}
+            <Box
+              component="span"
+              ref={countSpanRef}
+              onMouseEnter={handleCountMouseEnter}
+              onMouseLeave={handleCountMouseLeave}
+              sx={{ cursor: 'pointer' }}
+            >
+              {post.likes?.length || 0} {post.likes?.length === 1 ? 'Like' : 'Likes'}
+            </Box>
           </Button>
 
           {/* Comment Drawer Trigger Button */}
@@ -243,11 +267,11 @@ export const PostCard: React.FC<PostCardProps> = ({
           </Button>
         </Stack>
 
-        {/* Hover Avatar Stack Popover */}
+        {/* Hover Avatar Stack Popper (Non-blocking) */}
         <LikersPopover
           anchorEl={popoverAnchor}
-          open={isPopoverOpen}
-          onClose={handleLikeCountMouseLeave}
+          open={Boolean(popoverAnchor)}
+          onClose={() => setPopoverAnchor(null)}
           likes={post.likes || []}
         />
       </CardContent>

@@ -59,9 +59,16 @@ export const FeedPage: React.FC = () => {
       return;
     }
 
-    const isCurrentlyLiked = postToLike.likes?.some(
-      (l) => l.userId === user._id || l.username.toLowerCase() === user.username.toLowerCase()
-    );
+    const currentUserId = String(user._id);
+    const currentUsername = (user.username || '').toLowerCase();
+
+    const isMatch = (l: { userId?: any; username?: string }) => {
+      const matchId = l.userId && String(l.userId) === currentUserId;
+      const matchName = l.username && l.username.toLowerCase() === currentUsername;
+      return Boolean(matchId || matchName);
+    };
+
+    const isCurrentlyLiked = Boolean(postToLike.likes?.some(isMatch));
 
     // Save snapshot for potential rollback
     const previousPosts = [...posts];
@@ -73,10 +80,7 @@ export const FeedPage: React.FC = () => {
 
         let updatedLikes = [...(p.likes || [])];
         if (isCurrentlyLiked) {
-          updatedLikes = updatedLikes.filter(
-            (l) =>
-              l.userId !== user._id && l.username.toLowerCase() !== user.username.toLowerCase()
-          );
+          updatedLikes = updatedLikes.filter((l) => !isMatch(l));
         } else {
           updatedLikes.push({ userId: user._id, username: user.username });
         }
@@ -91,10 +95,7 @@ export const FeedPage: React.FC = () => {
         if (!prev) return null;
         let updatedLikes = [...(prev.likes || [])];
         if (isCurrentlyLiked) {
-          updatedLikes = updatedLikes.filter(
-            (l) =>
-              l.userId !== user._id && l.username.toLowerCase() !== user.username.toLowerCase()
-          );
+          updatedLikes = updatedLikes.filter((l) => !isMatch(l));
         } else {
           updatedLikes.push({ userId: user._id, username: user.username });
         }

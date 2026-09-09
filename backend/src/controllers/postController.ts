@@ -130,8 +130,8 @@ export const toggleLike = async (
     // Check if user has already liked
     const existingIndex = post.likes.findIndex(
       (like: any) =>
-        like.userId.toString() === currentUserId ||
-        like.username.toLowerCase() === currentUsername.toLowerCase()
+        (like.userId && like.userId.toString() === currentUserId) ||
+        (like.username && like.username.toLowerCase() === currentUsername.toLowerCase())
     );
 
     let liked = false;
